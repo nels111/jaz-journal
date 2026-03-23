@@ -1,6 +1,6 @@
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO = 'nels111/jaz-journal-data';
-const API_KEY = process.env.JAZ_API_KEY;
+const API_KEY = (process.env.JAZ_API_KEY || '').trim();
 
 async function githubAPI(path, method = 'GET', body = null) {
   const opts = {
@@ -78,7 +78,7 @@ module.exports = async function handler(req, res) {
     if (req.method === 'POST') {
       // Auth check for writes
       const key = req.headers['x-api-key'];
-      if (key !== API_KEY) {
+      if (!API_KEY || key !== API_KEY) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
