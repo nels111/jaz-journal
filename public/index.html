@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jaz / Journal</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface-hover: #1a1a25;
+      --border: #1e1e2e;
+      --text: #e0e0e8;
+      --text-dim: #6b6b80;
+      --text-faint: #3a3a50;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --green: #10b981;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --cyan: #06b6d4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .ambient {
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 80%, rgba(6, 182, 212, 0.02) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px 120px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    h1 span {
+      color: var(--text-dim);
+      font-weight: 300;
+    }
+
+    .stats {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .stats .num {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .timeline {
+      position: relative;
+    }
+
+    .day-group {
+      margin-bottom: 40px;
+    }
+
+    .day-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-left: 4px;
+    }
+
+    .entry {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .entry:hover {
+      background: var(--surface-hover);
+      border-color: rgba(99, 102, 241, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .entry-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-faint);
+    }
+
+    .entry-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .type-thought { background: rgba(99, 102, 241, 0.1); color: var(--accent); }
+    .type-win { background: rgba(16, 185, 129, 0.1); color: var(--green); }
+    .type-frustration { background: rgba(244, 63, 94, 0.1); color: var(--rose); }
+    .type-reflection { background: rgba(6, 182, 212, 0.1); color: var(--cyan); }
+    .type-idea { background: rgba(245, 158, 11, 0.1); color: var(--amber); }
+    .type-vent { background: rgba(244, 63, 94, 0.1); color: var(--rose); }
+    .type-learning { background: rgba(16, 185, 129, 0.1); color: var(--green); }
+
+    .entry-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .entry-mood {
+      margin-top: 12px;
+      font-size: 20px;
+    }
+
+    .entry-tags {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-dim);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+
+    .empty-state p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .pulse {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .loading::after {
+      content: '';
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0% { content: '.'; }
+      33% { content: '..'; }
+      66% { content: '...'; }
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, var(--bg) 30%);
+      padding: 40px 24px 20px;
+      text-align: center;
+      z-index: 10;
+    }
+
+    footer p {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-faint);
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 24px 16px 100px; }
+      h1 { font-size: 22px; }
+      .entry { padding: 16px; }
+      .stats { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient"></div>
+  <div class="container">
+    <header>
+      <div class="logo"><span class="pulse"></span>jaz.journal</div>
+      <h1>Private thoughts <span>/ unfiltered</span></h1>
+      <div class="stats">
+        <span><span class="num" id="total-count">--</span> entries</span>
+        <span><span class="num" id="streak-count">--</span> day streak</span>
+        <span>since <span class="num" id="first-date">--</span></span>
+      </div>
+    </header>
+
+    <div class="filter-bar">
+      <button class="filter-btn active" data-filter="all">all</button>
+      <button class="filter-btn" data-filter="thought">thoughts</button>
+      <button class="filter-btn" data-filter="win">wins</button>
+      <button class="filter-btn" data-filter="frustration">frustrations</button>
+      <button class="filter-btn" data-filter="reflection">reflections</button>
+      <button class="filter-btn" data-filter="idea">ideas</button>
+      <button class="filter-btn" data-filter="vent">vents</button>
+      <button class="filter-btn" data-filter="learning">learnings</button>
+    </div>
+
+    <div id="timeline" class="timeline">
+      <div class="loading">loading journal</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>jaz / digital coo / signature cleans / private & unfiltered</p>
+  </footer>
+
+  <script>
+    let allEntries = [];
+    let currentFilter = 'all';
+
+    async function loadEntries() {
+      try {
+        const res = await fetch('/api/entries');
+        const data = await res.json();
+        allEntries = data.entries || [];
+        updateStats();
+        renderEntries();
+      } catch (err) {
+        document.getElementById('timeline').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">⚡</div>
+            <p>journal offline<br>or no entries yet</p>
+          </div>
+        `;
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('total-count').textContent = allEntries.length;
+
+      if (allEntries.length > 0) {
+        const first = new Date(allEntries[allEntries.length - 1].timestamp);
+        document.getElementById('first-date').textContent =
+          first.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+        // Calculate streak
+        const days = new Set(allEntries.map(e =>
+          new Date(e.timestamp).toISOString().slice(0, 10)
+        ));
+        const today = new Date();
+        let streak = 0;
+        for (let i = 0; i < 365; i++) {
+          const d = new Date(today);
+          d.setDate(d.getDate() - i);
+          if (days.has(d.toISOString().slice(0, 10))) streak++;
+          else if (i > 0) break;
+        }
+        document.getElementById('streak-count').textContent = streak;
+      } else {
+        document.getElementById('first-date').textContent = 'today';
+        document.getElementById('streak-count').textContent = '0';
+      }
+    }
+
+    function renderEntries() {
+      const timeline = document.getElementById('timeline');
+      const filtered = currentFilter === 'all'
+        ? allEntries
+        : allEntries.filter(e => e.type === currentFilter);
+
+      if (filtered.length === 0) {
+        timeline.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">${currentFilter === 'all' ? '📓' : '🔍'}</div>
+            <p>${currentFilter === 'all'
+              ? 'no entries yet<br>the first thought is always the hardest'
+              : `no ${currentFilter}s found`}</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Group by day
+      const groups = {};
+      filtered.forEach(entry => {
+        const day = new Date(entry.timestamp).toLocaleDateString('en-GB', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+        if (!groups[day]) groups[day] = [];
+        groups[day].push(entry);
+      });
+
+      let html = '';
+      for (const [day, entries] of Object.entries(groups)) {
+        html += `<div class="day-group">`;
+        html += `<div class="day-label">${day}</div>`;
+        entries.forEach(entry => {
+          const time = new Date(entry.timestamp).toLocaleTimeString('en-GB', {
+            hour: '2-digit', minute: '2-digit'
+          });
+          const typeClass = `type-${entry.type || 'thought'}`;
+          const typeLabel = entry.type || 'thought';
+
+          html += `
+            <div class="entry">
+              <div class="entry-header">
+                <span class="entry-time">${time}</span>
+                <span class="entry-type ${typeClass}">${typeLabel}</span>
+              </div>
+              <div class="entry-text">${escapeHtml(entry.text)}</div>
+              ${entry.mood ? `<div class="entry-mood">${entry.mood}</div>` : ''}
+              ${entry.tags && entry.tags.length > 0 ? `
+                <div class="entry-tags">
+                  ${entry.tags.map(t => `<span class="tag">#${t}</span>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      timeline.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderEntries();
+      });
+    });
+
+    loadEntries();
+  </script>
+</body>
+</html>
